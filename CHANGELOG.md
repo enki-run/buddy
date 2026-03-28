@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+- Optional `url` field on nodes for external links (product pages, docs, RFCs, etc.)
+- Unified "Links" section in project sidebar (repo + URL-bearing nodes)
+- URL rendered as clickable external link on node detail page
+- Migration `0003_node_url.sql`
+
 ## [3.0.0] - 2026-03-28
 
 ### Added

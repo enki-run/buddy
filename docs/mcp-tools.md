@@ -57,6 +57,7 @@ Create a new knowledge node. For `secret` nodes, content is AES-256-GCM encrypte
 | `type` | `concept` \| `fact` \| `decision` \| `template` \| `secret` \| `config` | Yes | Node type |
 | `title` | string (max 500) | Yes | Node title |
 | `content` | string (max 100 KB) | No | Node content (markdown supported) |
+| `url` | string (max 2048, valid URL) | No | External URL (product page, docs, RFC, etc.) |
 | `tags` | string[] (max 20 items, each max 50 chars) | No | Tags for categorisation |
 | `context` | `ifp-labs` \| `bemodi` \| `dev` \| `musik` \| `privat` | No | Organisational context |
 
@@ -65,10 +66,11 @@ Create a new knowledge node. For `secret` nodes, content is AES-256-GCM encrypte
 **Example:**
 ```json
 {
-  "type": "decision",
-  "title": "ADR-001: Use D1 for persistence",
-  "content": "## Decision\nWe use Cloudflare D1...",
-  "tags": ["architecture", "database"],
+  "type": "config",
+  "title": "buddy v3 — Produktseite",
+  "content": "Landing page for buddy v3",
+  "url": "https://buddy.enki.run/",
+  "tags": ["landing-page", "cloudflare-pages"],
   "context": "dev"
 }
 ```
@@ -105,6 +107,7 @@ Update an existing node's fields. Only provided fields are changed.
 | `type` | NodeType | No | Change node type |
 | `title` | string (max 500) | No | New title |
 | `content` | string (max 100 KB) | No | New content |
+| `url` | string (max 2048, valid URL) | No | External URL (product page, docs, RFC, etc.) |
 | `tags` | string[] | No | Replace tags |
 | `context` | Context | No | Change context |
 | `status` | `active` \| `deprecated` \| `draft` | No | Change status |

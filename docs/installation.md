@@ -91,6 +91,7 @@ This runs `wrangler d1 migrations apply buddy-v3 --remote` and executes:
 
 - `migrations/0001_initial.sql` — nodes, edges, projects, tasks, activity_log tables + indexes
 - `migrations/0002_fts.sql` — FTS5 virtual table + INSERT/UPDATE/DELETE triggers
+- `migrations/0003_node_url.sql` — optional `url` column on nodes for external links
 
 For local development only:
 
