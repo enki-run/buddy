@@ -15,6 +15,7 @@ export class NodeService {
     type: NodeType;
     title: string;
     content?: string;
+    url?: string;
     tags?: string[];
     context?: Context;
     encryptionToken?: string;
@@ -38,10 +39,10 @@ export class NodeService {
 
     await this.db
       .prepare(
-        `INSERT INTO nodes (id, type, title, content, tags, context, status, encrypted, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, 'active', ?, ?, ?)`,
+        `INSERT INTO nodes (id, type, title, content, url, tags, context, status, encrypted, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?)`,
       )
-      .bind(id, params.type, params.title, content, tagsJson, params.context ?? null, encrypted, now, now)
+      .bind(id, params.type, params.title, content, params.url ?? null, tagsJson, params.context ?? null, encrypted, now, now)
       .run();
 
     await this.activity.log({
@@ -56,6 +57,7 @@ export class NodeService {
       type: params.type,
       title: params.title,
       content,
+      url: params.url ?? null,
       tags: tagsJson,
       context: params.context ?? null,
       status: "active",
@@ -229,6 +231,7 @@ export class NodeService {
       type: NodeType;
       title: string;
       content: string;
+      url: string;
       tags: string[];
       context: Context;
       status: NodeStatus;
@@ -270,6 +273,10 @@ export class NodeService {
         setClauses.push("content = ?");
         bindings.push(params.content);
       }
+    }
+    if (params.url !== undefined) {
+      setClauses.push("url = ?");
+      bindings.push(params.url);
     }
     if (params.tags !== undefined) {
       setClauses.push("tags = ?");
@@ -332,6 +339,7 @@ export class NodeService {
     type: NodeType;
     title: string;
     content?: string;
+    url?: string;
     tags?: string[];
     context?: Context;
   }): void {
@@ -363,6 +371,7 @@ export class NodeService {
     type: NodeType;
     title: string;
     content: string;
+    url: string;
     tags: string[];
     context: Context;
     status: NodeStatus;

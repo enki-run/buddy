@@ -77,6 +77,20 @@ export const NodeDetailPage: FC<NodeDetailProps> = ({ node, incoming, outgoing }
         </div>
       </div>
 
+      {/* URL */}
+      {node.url && (
+        <div style="margin-bottom: 1.23rem;">
+          <a
+            href={escapeHtml(node.url)}
+            target="_blank"
+            rel="noopener"
+            style="font-size: 0.85rem; color: var(--color-body); word-break: break-all;"
+          >
+            {escapeHtml(node.url)}
+          </a>
+        </div>
+      )}
+
       {/* Tags */}
       {tags.length > 0 && (
         <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.23rem;">
