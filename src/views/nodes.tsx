@@ -14,6 +14,7 @@ interface NodesFilters {
 interface NodesProps {
   result: PaginatedResult<Node>;
   filters: NodesFilters;
+  csrfToken?: string;
 }
 
 /** Parse JSON tags field, return array (empty if invalid/null) */
@@ -52,13 +53,13 @@ function buildUrl(filters: NodesFilters, overrides: Partial<NodesFilters> = {}):
   return qs ? `/nodes?${qs}` : "/nodes";
 }
 
-export const NodesPage: FC<NodesProps> = ({ result, filters }) => {
+export const NodesPage: FC<NodesProps> = ({ result, filters, csrfToken }) => {
   const { data, total, has_more, limit, offset } = result;
   const pageCount = Math.ceil(total / limit);
   const currentPage = Math.floor(offset / limit) + 1;
 
   return (
-    <Layout title="Nodes" activePath="/nodes">
+    <Layout title="Nodes" activePath="/nodes" csrfToken={csrfToken}>
       <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.23rem; flex-wrap: wrap;">
         <h1 style="font-size: 1.38rem;">Node Browser</h1>
         <span style="font-family: var(--font-mono); font-size: 0.77rem; color: var(--color-subtle);">{total} total</span>

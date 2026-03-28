@@ -6,6 +6,7 @@ interface LayoutProps {
   title?: string;
   children: any;
   activePath?: string;
+  csrfToken?: string;
 }
 
 const HEAD_LINKS = raw('');
@@ -191,7 +192,7 @@ const PALETTE_SCRIPT = raw(`<script>
 })();
 </script>`);
 
-export const Layout: FC<LayoutProps> = ({ title, children, activePath }) => {
+export const Layout: FC<LayoutProps> = ({ title, children, activePath, csrfToken }) => {
   return (
     <html lang="de">
       <head>
@@ -230,6 +231,7 @@ export const Layout: FC<LayoutProps> = ({ title, children, activePath }) => {
                 {SUN_SVG}
               </button>
               <form method="post" action="/logout" style="display: inline; margin-left: 8px;">
+                {csrfToken && <input type="hidden" name="csrf" value={csrfToken} />}
                 <button type="submit" class="ctrl-btn" aria-label="Logout" style="font-size: 9px; width: auto; padding: 0 8px;">Logout</button>
               </form>
             </div>

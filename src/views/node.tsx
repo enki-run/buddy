@@ -8,6 +8,7 @@ interface NodeDetailProps {
   node: Node;
   incoming: Array<{ edge: Edge; entity: any }>;
   outgoing: Array<{ edge: Edge; entity: any }>;
+  csrfToken?: string;
 }
 
 /** Parse JSON tags, return array */
@@ -47,11 +48,11 @@ function entityUrl(entityType: string, entityId: string): string {
   }
 }
 
-export const NodeDetailPage: FC<NodeDetailProps> = ({ node, incoming, outgoing }) => {
+export const NodeDetailPage: FC<NodeDetailProps> = ({ node, incoming, outgoing, csrfToken }) => {
   const tags = parseTags(node.tags);
 
   return (
-    <Layout title={node.title} activePath="/nodes">
+    <Layout title={node.title} activePath="/nodes" csrfToken={csrfToken}>
       {/* Breadcrumb */}
       <div class="breadcrumb">
         <a href="/nodes">Nodes</a>

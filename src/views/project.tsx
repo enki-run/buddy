@@ -10,6 +10,7 @@ interface ProjectPageProps {
   related_nodes: Array<{ node: Node; edge: Edge }>;
   health: HealthScore | null;
   activities: Activity[];
+  csrfToken?: string;
 }
 
 const SCORE_COLOR: Record<string, string> = {
@@ -91,6 +92,7 @@ export const ProjectPage: FC<ProjectPageProps> = ({
   related_nodes,
   health,
   activities,
+  csrfToken,
 }) => {
   const done = tasks.filter((t) => t.status === "done").length;
   const inProgress = tasks.filter((t) => t.status === "in_progress").length;
@@ -98,7 +100,7 @@ export const ProjectPage: FC<ProjectPageProps> = ({
   const blocked = tasks.filter((t) => t.status === "blocked").length;
 
   return (
-    <Layout title={project.name} activePath="/project">
+    <Layout title={project.name} activePath="/project" csrfToken={csrfToken}>
       <div class="hub-layout">
         {/* Sidebar: related nodes */}
         <div class="hub-sidebar">
