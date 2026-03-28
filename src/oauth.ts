@@ -160,12 +160,14 @@ export function createOAuthRoutes() {
   });
 
   // Dynamic Client Registration (MCP spec requires this)
+  // SECURITY: Never return real tokens — client_secret is a placeholder.
+  // Users authenticate via the /oauth/authorize form with their token.
   oauth.post("/oauth/register", async (c) => {
     const body = await c.req.json();
     return c.json(
       {
         client_id: OAUTH_CLIENT_ID,
-        client_secret: c.env.BUDDY_TOKEN,
+        client_secret: OAUTH_CLIENT_ID,
         client_name: body.client_name || "MCP Client",
         redirect_uris: body.redirect_uris || [],
       },
