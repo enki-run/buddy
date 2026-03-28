@@ -1,0 +1,36 @@
+{
+  "name": "buddy",
+  "version": "3.0.0",
+  "description": "Agent-first Knowledge Graph — MCP server for LLMs",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "seed": "wrangler d1 execute buddy-v3 --remote --file=scripts/seed.sql",
+    "migrate": "wrangler d1 migrations apply buddy-v3 --remote",
+    "migrate:local": "wrangler d1 migrations apply buddy-v3 --local"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.0",
+    "highlight.js": "^11.11.0",
+    "hono": "^4.7.0",
+    "marked": "^15.0.0",
+    "ulidx": "^2.4.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.8.0",
+    "@cloudflare/workers-types": "^4.20250313.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0",
+    "wrangler": "^4.0.0"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nxio-me/buddy.git"
+  },
+  "homepage": "https://buddy.nxio.me"
+}

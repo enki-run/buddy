@@ -1,0 +1,18 @@
+name = "buddy"
+main = "src/index.tsx"
+compatibility_date = "2025-12-01"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = false
+
+# Uncomment and set your custom domain:
+# route = { pattern = "buddy.yourdomain.com", custom_domain = true }
+
+[[d1_databases]]
+binding = "DB"
+database_name = "buddy"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
