@@ -18,7 +18,7 @@
     "hono": "^4.7.0",
     "marked": "^15.0.0",
     "ulidx": "^2.4.0",
-    "zod": "^3.24.0"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.8.0",
