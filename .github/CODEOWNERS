@@ -1,7 +1,7 @@
 # Default owner for everything
-* @nxio
+* @cosrv
 
 # Security-critical files require explicit review
-src/auth.ts @nxio
-src/oauth.ts @nxio
-src/services/node.ts @nxio
+src/auth.ts @cosrv
+src/oauth.ts @cosrv
+src/services/node.ts @cosrv
