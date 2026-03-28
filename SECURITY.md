@@ -11,8 +11,8 @@
 
 If you discover a security vulnerability, please report it responsibly:
 
-1. **Email:** security@nxio.me
-2. **GitHub Security Advisories:** [Report a vulnerability](https://github.com/nxio-me/buddy/security/advisories/new)
+1. **Email:** security@enki.run
+2. **GitHub Security Advisories:** [Report a vulnerability](https://github.com/enki-run/buddy/security/advisories/new)
 
 **Do not open a public issue for security vulnerabilities.**
 

@@ -58,7 +58,7 @@ Prerequisites: Node.js 20+, a Cloudflare account, `wrangler` CLI.
 
 ```bash
 # Clone and install
-git clone git@github.com:nxio-me/buddy.git
+git clone git@github.com:enki-run/buddy.git
 cd buddy
 npm install
 

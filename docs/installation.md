@@ -18,7 +18,7 @@ wrangler login
 ## Step 1 — Clone the Repository
 
 ```bash
-git clone git@github.com:nxio-me/buddy.git
+git clone git@github.com:enki-run/buddy.git
 cd buddy
 npm install
 cp wrangler.toml.example wrangler.toml

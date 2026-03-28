@@ -41,4 +41,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - workers_dev = false (no public .workers.dev route)
 - Minimum token entropy warning (< 32 hex chars)
 
-[3.0.0]: https://github.com/nxio-me/buddy/releases/tag/v3.0.0
+[3.0.0]: https://github.com/enki-run/buddy/releases/tag/v3.0.0

@@ -1,7 +1,7 @@
 # buddy — Agent-first Knowledge Graph
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Tests](https://github.com/nxio-me/buddy/actions/workflows/ci.yml/badge.svg)](https://github.com/nxio-me/buddy/actions)
+[![Tests](https://github.com/enki-run/buddy/actions/workflows/ci.yml/badge.svg)](https://github.com/enki-run/buddy/actions)
 
 > A graph-based knowledge substrate for LLMs and AI agents, with a human-readable dashboard.
 
@@ -23,7 +23,7 @@ buddy is an MCP server that provides 25 tools for managing a knowledge graph. Ag
 
 ```bash
 # 1. Clone
-git clone git@github.com:nxio-me/buddy.git && cd buddy
+git clone git@github.com:enki-run/buddy.git && cd buddy
 
 # 2. Install + configure
 npm install

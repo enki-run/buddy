@@ -30,7 +30,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nxio-me/buddy.git"
+    "url": "https://github.com/enki-run/buddy.git"
   },
-  "homepage": "https://buddy.nxio.me"
+  "homepage": "https://github.com/enki-run/buddy"
 }
