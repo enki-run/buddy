@@ -522,7 +522,7 @@ describe("NodeService", () => {
     });
 
     expect(fetched).not.toBeNull();
-    expect(fetched!.content).toBe("[encrypted]");
+    expect(fetched!.content).toBe("[Entschlüsselung fehlgeschlagen]");
   });
 
   it("save() secret without encryption token throws error", async () => {

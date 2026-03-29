@@ -48,6 +48,7 @@ app.use("*", async (c, next) => {
     "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'",
   );
   c.header("Referrer-Policy", "strict-origin-when-cross-origin");
+  c.header("Strict-Transport-Security", "max-age=63072000; includeSubDomains");
 });
 
 // --- OAuth routes (pre-auth, own auth handling) ---

@@ -52,6 +52,7 @@ function sanitize(html: string): string {
   // Remove javascript: and data: URLs in href/src (except data:image)
   clean = clean.replace(/href\s*=\s*["']?\s*javascript:/gi, 'href="');
   clean = clean.replace(/src\s*=\s*["']?\s*javascript:/gi, 'src="');
+  clean = clean.replace(/src\s*=\s*["']?\s*data:/gi, 'src="');
 
   // Strip disallowed tags but keep content
   clean = clean.replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/g, (match, tag) => {

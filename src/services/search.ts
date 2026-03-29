@@ -7,14 +7,25 @@ export class SearchService {
     const pattern = `%${query}%`;
 
     // FTS5 on nodes
-    const nodes = await this.db.prepare(
-      `SELECT n.id, n.title, n.type FROM nodes n
-       JOIN nodes_fts f ON n.rowid = f.rowid
-       WHERE nodes_fts MATCH ?
-       ORDER BY rank LIMIT ?`
-    ).bind(query, limit).all<{ id: string; title: string; type: string }>();
-    for (const n of nodes.results ?? []) {
-      results.push({ type: `node:${n.type}`, id: n.id, title: n.title, match: "fts" });
+    try {
+      const nodes = await this.db.prepare(
+        `SELECT n.id, n.title, n.type FROM nodes n
+         JOIN nodes_fts f ON n.rowid = f.rowid
+         WHERE nodes_fts MATCH ?
+         ORDER BY rank LIMIT ?`
+      ).bind(query, limit).all<{ id: string; title: string; type: string }>();
+      for (const n of nodes.results ?? []) {
+        results.push({ type: `node:${n.type}`, id: n.id, title: n.title, match: "fts" });
+      }
+    } catch {
+      // Malformed FTS5 query — fall back to LIKE search on nodes
+      const likePattern = `%${query}%`;
+      const nodes = await this.db.prepare(
+        "SELECT id, title, type FROM nodes WHERE title LIKE ? OR content LIKE ? LIMIT ?"
+      ).bind(likePattern, likePattern, limit).all<{ id: string; title: string; type: string }>();
+      for (const n of nodes.results ?? []) {
+        results.push({ type: `node:${n.type}`, id: n.id, title: n.title, match: "like" });
+      }
     }
 
     // LIKE on projects

@@ -33,7 +33,7 @@ export class NodeService {
       if (!params.encryptionToken) {
         throw new Error("Encryption token required for secret nodes");
       }
-      content = await this.encrypt(content, params.encryptionToken);
+      content = await this.encrypt(content, params.encryptionToken, id);
       encrypted = 1;
     }
 
@@ -84,16 +84,25 @@ export class NodeService {
       }
 
       try {
-        node.content = await this.decrypt(node.content!, decryptionTokens.current);
+        node.content = await this.decrypt(node.content!, decryptionTokens.current, node.id);
       } catch {
-        if (decryptionTokens.previous) {
-          try {
-            node.content = await this.decrypt(node.content!, decryptionTokens.previous);
-          } catch {
-            return { ...node, content: "[encrypted]" };
+        // Fallback: try without salt (pre-migration secrets)
+        try {
+          node.content = await this.decrypt(node.content!, decryptionTokens.current);
+        } catch {
+          if (decryptionTokens.previous) {
+            try {
+              node.content = await this.decrypt(node.content!, decryptionTokens.previous, node.id);
+            } catch {
+              try {
+                node.content = await this.decrypt(node.content!, decryptionTokens.previous);
+              } catch {
+                return { ...node, content: "[Entschlüsselung fehlgeschlagen]" };
+              }
+            }
+          } else {
+            return { ...node, content: "[Entschlüsselung fehlgeschlagen]" };
           }
-        } else {
-          return { ...node, content: "[encrypted]" };
         }
       }
     }
@@ -187,42 +196,47 @@ export class NodeService {
 
     const extraWhere = conditions.length > 0 ? `AND ${conditions.join(" AND ")}` : "";
 
-    const [dataResult, countResult] = await Promise.all([
-      this.db
-        .prepare(
-          `SELECT n.* FROM nodes n
-           JOIN nodes_fts f ON n.rowid = f.rowid
-           WHERE nodes_fts MATCH ? ${extraWhere}
-           ORDER BY rank
-           LIMIT ? OFFSET ?`,
-        )
-        .bind(...bindings, limit, offset)
-        .all<Node>(),
-      this.db
-        .prepare(
-          `SELECT COUNT(*) as total FROM nodes n
-           JOIN nodes_fts f ON n.rowid = f.rowid
-           WHERE nodes_fts MATCH ? ${extraWhere}`,
-        )
-        .bind(...bindings)
-        .first<{ total: number }>(),
-    ]);
+    try {
+      const [dataResult, countResult] = await Promise.all([
+        this.db
+          .prepare(
+            `SELECT n.* FROM nodes n
+             JOIN nodes_fts f ON n.rowid = f.rowid
+             WHERE nodes_fts MATCH ? ${extraWhere}
+             ORDER BY rank
+             LIMIT ? OFFSET ?`,
+          )
+          .bind(...bindings, limit, offset)
+          .all<Node>(),
+        this.db
+          .prepare(
+            `SELECT COUNT(*) as total FROM nodes n
+             JOIN nodes_fts f ON n.rowid = f.rowid
+             WHERE nodes_fts MATCH ? ${extraWhere}`,
+          )
+          .bind(...bindings)
+          .first<{ total: number }>(),
+      ]);
 
-    const total = countResult?.total ?? 0;
-    const data = dataResult.results.map((node) => {
-      if (node.type === "secret") {
-        return { ...node, content: null };
-      }
-      return node;
-    });
+      const total = countResult?.total ?? 0;
+      const data = dataResult.results.map((node) => {
+        if (node.type === "secret") {
+          return { ...node, content: null };
+        }
+        return node;
+      });
 
-    return {
-      data,
-      has_more: offset + data.length < total,
-      total,
-      limit,
-      offset,
-    };
+      return {
+        data,
+        has_more: offset + data.length < total,
+        total,
+        limit,
+        offset,
+      };
+    } catch {
+      // Return empty result on malformed FTS5 query
+      return { data: [], has_more: false, total: 0, limit, offset };
+    }
   }
 
   async update(
@@ -265,7 +279,7 @@ export class NodeService {
         if (!params.encryptionToken) {
           throw new Error("Encryption token required for secret nodes");
         }
-        const encrypted = await this.encrypt(params.content, params.encryptionToken);
+        const encrypted = await this.encrypt(params.content, params.encryptionToken, id);
         setClauses.push("content = ?");
         bindings.push(encrypted);
         setClauses.push("encrypted = 1");
@@ -405,7 +419,7 @@ export class NodeService {
 
   // === Encryption ===
 
-  private async deriveKey(token: string): Promise<CryptoKey> {
+  private async deriveKey(token: string, salt?: string): Promise<CryptoKey> {
     const keyMaterial = await crypto.subtle.importKey(
       "raw",
       new TextEncoder().encode(token),
@@ -413,11 +427,15 @@ export class NodeService {
       false,
       ["deriveKey"],
     );
+    // Use node ID as salt if provided, otherwise null bytes (backwards compat)
+    const saltBytes = salt
+      ? new TextEncoder().encode(salt)
+      : new Uint8Array(32);
     return crypto.subtle.deriveKey(
       {
         name: "HKDF",
         hash: "SHA-256",
-        salt: new Uint8Array(32),
+        salt: saltBytes,
         info: new TextEncoder().encode("buddy-encryption"),
       },
       keyMaterial,
@@ -427,8 +445,8 @@ export class NodeService {
     );
   }
 
-  private async encrypt(plaintext: string, token: string): Promise<string> {
-    const key = await this.deriveKey(token);
+  private async encrypt(plaintext: string, token: string, salt?: string): Promise<string> {
+    const key = await this.deriveKey(token, salt);
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const encoded = new TextEncoder().encode(plaintext);
     const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoded);
@@ -438,8 +456,8 @@ export class NodeService {
     return btoa(String.fromCharCode(...combined));
   }
 
-  private async decrypt(encoded: string, token: string): Promise<string> {
-    const key = await this.deriveKey(token);
+  private async decrypt(encoded: string, token: string, salt?: string): Promise<string> {
+    const key = await this.deriveKey(token, salt);
     const combined = Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0));
     const iv = combined.slice(0, 12);
     const ciphertext = combined.slice(12);
