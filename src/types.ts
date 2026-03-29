@@ -73,6 +73,7 @@ export interface Node {
   type: NodeType;
   title: string;
   content: string | null;
+  url: string | null;
   tags: string | null;
   context: Context | null;
   status: NodeStatus;

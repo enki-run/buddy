@@ -6,6 +6,7 @@ import { raw } from "hono/html";
 
 interface HomeProps {
   data: ContextLoadResult;
+  csrfToken?: string;
 }
 
 /** Format ISO datetime to short local string */
@@ -36,11 +37,11 @@ const TASK_STATUS_LABEL: Record<string, string> = {
   cancelled: "CANCELLED",
 };
 
-export const HomePage: FC<HomeProps> = ({ data }) => {
+export const HomePage: FC<HomeProps> = ({ data, csrfToken }) => {
   const { stats, projects, tasks_attention, drafts, recent_activity, hint } = data;
 
   return (
-    <Layout title="Dashboard" activePath="/">
+    <Layout title="Dashboard" activePath="/" csrfToken={csrfToken}>
       {/* Stats row */}
       <div class="stats-bar">
         <div>

@@ -91,6 +91,49 @@ describe("NodeService", () => {
     ).rejects.toThrow("exceeds maximum length of 50 characters");
   });
 
+  it("save() with url stores it and returns it", async () => {
+    const node = await service.save({
+      type: "config",
+      title: "Product Page",
+      url: "https://buddy.enki.run/",
+      context: "dev",
+    });
+
+    expect(node.url).toBe("https://buddy.enki.run/");
+
+    const row = await env.DB.prepare("SELECT url FROM nodes WHERE id = ?")
+      .bind(node.id)
+      .first<{ url: string }>();
+    expect(row?.url).toBe("https://buddy.enki.run/");
+  });
+
+  it("save() without url defaults to null", async () => {
+    const node = await service.save({
+      type: "concept",
+      title: "No URL",
+    });
+
+    expect(node.url).toBeNull();
+  });
+
+  it("update() can set and change url", async () => {
+    const node = await service.save({
+      type: "config",
+      title: "Docs Link",
+    });
+    expect(node.url).toBeNull();
+
+    const updated = await service.update(node.id, {
+      url: "https://docs.example.com",
+    });
+    expect(updated!.url).toBe("https://docs.example.com");
+
+    const changed = await service.update(node.id, {
+      url: "https://docs.example.com/v2",
+    });
+    expect(changed!.url).toBe("https://docs.example.com/v2");
+  });
+
   it("save() logs activity with action node_created", async () => {
     const node = await service.save({
       type: "concept",
@@ -479,7 +522,7 @@ describe("NodeService", () => {
     });
 
     expect(fetched).not.toBeNull();
-    expect(fetched!.content).toBe("[encrypted]");
+    expect(fetched!.content).toBe("[Entschlüsselung fehlgeschlagen]");
   });
 
   it("save() secret without encryption token throws error", async () => {

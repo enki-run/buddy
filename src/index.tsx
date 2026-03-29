@@ -10,6 +10,7 @@ import {
   handleLoginFailure,
   handleLogout,
   hashIP,
+  timingSafeEqual,
 } from "./auth";
 import { createOAuthRoutes } from "./oauth";
 import { ActivityService } from "./services/activity";
@@ -47,6 +48,7 @@ app.use("*", async (c, next) => {
     "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'",
   );
   c.header("Referrer-Policy", "strict-origin-when-cross-origin");
+  c.header("Strict-Transport-Security", "max-age=63072000; includeSubDomains");
 });
 
 // --- OAuth routes (pre-auth, own auth handling) ---
@@ -74,7 +76,8 @@ app.post("/login", async (c) => {
   const ipHash = clientIP !== "unknown" ? await hashIP(clientIP) : undefined;
 
   const csrfValid = csrf ? await validateCsrfToken(csrf, c.env.BUDDY_TOKEN) : false;
-  if (!csrfValid || token !== c.env.BUDDY_TOKEN) {
+  const tokenValid = await timingSafeEqual(token, c.env.BUDDY_TOKEN);
+  if (!csrfValid || !tokenValid) {
     await handleLoginFailure(activity, ipHash);
     const newCsrfToken = await generateCsrfToken(c.env.BUDDY_TOKEN);
     return c.html(<LoginPage csrfToken={newCsrfToken} error />, 401);
@@ -92,6 +95,13 @@ app.post("/login", async (c) => {
 });
 
 app.post("/logout", async (c) => {
+  const body = await c.req.parseBody();
+  const csrf = body["csrf"] as string;
+  const csrfValid = csrf ? await validateCsrfToken(csrf, c.env.BUDDY_TOKEN) : false;
+  if (!csrfValid) {
+    return c.redirect("/");
+  }
+
   const activity = new ActivityService(c.env.DB);
   const clientIP = c.req.header("cf-connecting-ip") ?? "unknown";
   const ipHash = clientIP !== "unknown" ? await hashIP(clientIP) : undefined;
@@ -142,7 +152,8 @@ app.get("/", async (c) => {
   const cache = new CacheService(c.env.CACHE);
   const context = new ContextService(c.env.DB, cache);
   const data = await context.load();
-  return c.html(<HomePage data={data} />);
+  const csrfToken = await generateCsrfToken(c.env.BUDDY_TOKEN);
+  return c.html(<HomePage data={data} csrfToken={csrfToken} />);
 });
 
 // --- Dashboard: Node Browser ---
@@ -166,10 +177,12 @@ app.get("/nodes", async (c) => {
     offset,
   });
 
+  const csrfToken = await generateCsrfToken(c.env.BUDDY_TOKEN);
   return c.html(
     <NodesPage
       result={result}
       filters={{ type: typeParam, context: contextParam, status: statusParam, offset }}
+      csrfToken={csrfToken}
     />
   );
 });
@@ -196,11 +209,13 @@ app.get("/nodes/:id", async (c) => {
     edgeService.getRelated({ entity_type: "node", entity_id: id, direction: "incoming", limit: 100, offset: 0 }),
   ]);
 
+  const csrfToken = await generateCsrfToken(c.env.BUDDY_TOKEN);
   return c.html(
     <NodeDetailPage
       node={node}
       outgoing={outgoingResult.data}
       incoming={incomingResult.data}
+      csrfToken={csrfToken}
     />
   );
 });
@@ -258,6 +273,7 @@ app.get("/project/:id", async (c) => {
     ({ node }) => node && typeof node === "object"
   );
 
+  const csrfToken = await generateCsrfToken(c.env.BUDDY_TOKEN);
   return c.html(
     <ProjectPage
       project={projectData.project}
@@ -265,12 +281,16 @@ app.get("/project/:id", async (c) => {
       related_nodes={related_nodes}
       health={health}
       activities={activityResult.data}
+      csrfToken={csrfToken}
     />
   );
 });
 
 // --- Dashboard: Graph ---
-app.get("/graph", (c) => c.html(<GraphPage />));
+app.get("/graph", async (c) => {
+  const csrfToken = await generateCsrfToken(c.env.BUDDY_TOKEN);
+  return c.html(<GraphPage csrfToken={csrfToken} />);
+});
 
 
 // --- Dashboard: Activity Log ---
@@ -281,7 +301,8 @@ app.get("/activity", async (c) => {
   const limit = 50;
 
   const result = await activityService.list({ limit, offset });
-  return c.html(<ActivityPage result={result} />);
+  const csrfToken = await generateCsrfToken(c.env.BUDDY_TOKEN);
+  return c.html(<ActivityPage result={result} csrfToken={csrfToken} />);
 });
 
 // --- API routes ---

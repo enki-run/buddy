@@ -5,6 +5,7 @@ import { escapeHtml } from "../markdown";
 
 interface ActivityPageProps {
   result: PaginatedResult<Activity>;
+  csrfToken?: string;
 }
 
 const ACTION_ICONS: Record<string, string> = {
@@ -42,7 +43,7 @@ function entityUrl(a: Activity): string | null {
   }
 }
 
-export const ActivityPage: FC<ActivityPageProps> = ({ result }) => {
+export const ActivityPage: FC<ActivityPageProps> = ({ result, csrfToken }) => {
   const { data: activities, total, has_more, offset, limit } = result;
 
   // Group by date
@@ -62,7 +63,7 @@ export const ActivityPage: FC<ActivityPageProps> = ({ result }) => {
   const nextOffset = offset + limit;
 
   return (
-    <Layout title="Aktivitätslog" activePath="/activity">
+    <Layout title="Aktivitätslog" activePath="/activity" csrfToken={csrfToken}>
       <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.23rem; flex-wrap: wrap;">
         <h1 style="font-size: 1.38rem;">Aktivitätslog</h1>
         <span style="font-family: var(--font-mono); font-size: 0.77rem; color: var(--color-subtle);">{total} total</span>

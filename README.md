@@ -87,6 +87,8 @@ Limit exposed tools via `?tools=` query parameter:
 | `secret` | Encrypted credentials (AES-256-GCM) | Variable (secret) |
 | `config` | Configuration values, URLs, flags | Variable (plain) |
 
+All node types support an optional `url` field for linking to external resources (product pages, docs, RFCs, etc.). Nodes with URLs appear as clickable links in the project sidebar.
+
 ## Edge Relations
 
 | Relation | Allowed between |

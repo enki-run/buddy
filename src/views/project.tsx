@@ -10,6 +10,7 @@ interface ProjectPageProps {
   related_nodes: Array<{ node: Node; edge: Edge }>;
   health: HealthScore | null;
   activities: Activity[];
+  csrfToken?: string;
 }
 
 const SCORE_COLOR: Record<string, string> = {
@@ -91,6 +92,7 @@ export const ProjectPage: FC<ProjectPageProps> = ({
   related_nodes,
   health,
   activities,
+  csrfToken,
 }) => {
   const done = tasks.filter((t) => t.status === "done").length;
   const inProgress = tasks.filter((t) => t.status === "in_progress").length;
@@ -98,7 +100,7 @@ export const ProjectPage: FC<ProjectPageProps> = ({
   const blocked = tasks.filter((t) => t.status === "blocked").length;
 
   return (
-    <Layout title={project.name} activePath="/project">
+    <Layout title={project.name} activePath="/project" csrfToken={csrfToken}>
       <div class="hub-layout">
         {/* Sidebar: related nodes */}
         <div class="hub-sidebar">
@@ -119,19 +121,38 @@ export const ProjectPage: FC<ProjectPageProps> = ({
             )}
           </div>
 
-          {project.repo && (
-            <div class="sidebar-section">
-              <div class="sidebar-header">Repository</div>
-              <a
-                href={`https://github.com/${escapeHtml(project.repo)}`}
-                target="_blank"
-                rel="noopener"
-                class="sidebar-link"
-              >
-                {escapeHtml(project.repo)}
-              </a>
-            </div>
-          )}
+          {(() => {
+            const linkNodes = related_nodes.filter(({ node }) => node.url);
+            const hasRepo = !!project.repo;
+            if (!hasRepo && linkNodes.length === 0) return null;
+            return (
+              <div class="sidebar-section">
+                <div class="sidebar-header">Links</div>
+                {hasRepo && (
+                  <a
+                    href={`https://github.com/${escapeHtml(project.repo!)}`}
+                    target="_blank"
+                    rel="noopener"
+                    class="sidebar-link"
+                  >
+                    <span class="badge badge-config" style="font-size: 0.62rem; padding: 1px 4px; margin-right: 4px;">repo</span>
+                    {escapeHtml(project.repo!)}
+                  </a>
+                )}
+                {linkNodes.map(({ node }) => (
+                  <a
+                    href={escapeHtml(node.url!)}
+                    target="_blank"
+                    rel="noopener"
+                    class="sidebar-link"
+                  >
+                    <span class={`badge badge-${escapeHtml(node.type)}`} style="font-size: 0.62rem; padding: 1px 4px; margin-right: 4px;">{escapeHtml(node.type)}</span>
+                    {escapeHtml(node.title)}
+                  </a>
+                ))}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Content area */}

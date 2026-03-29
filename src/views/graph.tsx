@@ -336,16 +336,16 @@ const LEGEND = raw(`<div style="position:absolute;bottom:12px;left:12px;backgrou
   <div style="margin-top:8px;font-size:0.58rem;color:var(--color-light);">Scroll = Zoom &middot; Drag = Verschieben</div>
 </div>`);
 
-export const GraphPage: FC = () => {
+export const GraphPage: FC<{ csrfToken?: string }> = ({ csrfToken }) => {
   return (
-    <Layout title="Graph" activePath="/graph">
+    <Layout title="Graph" activePath="/graph" csrfToken={csrfToken}>
       <h1 style="font-size: 1.38rem; margin-bottom: 1rem;">Knowledge Graph</h1>
       <div id="graph-container" class="ecosystem-graph" style="position: relative;">
         <svg id="graph-svg" style="width:100%;height:100%;display:block;"></svg>
         <div id="graph-tooltip" class="graph-tooltip" style="display: none; position: absolute;"></div>
         {LEGEND}
       </div>
-      {raw('<script id="d3-script" src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>')}
+      {raw('<script id="d3-script" src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>')}
       {GRAPH_SCRIPT}
     </Layout>
   );

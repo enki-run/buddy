@@ -8,6 +8,7 @@ interface NodeDetailProps {
   node: Node;
   incoming: Array<{ edge: Edge; entity: any }>;
   outgoing: Array<{ edge: Edge; entity: any }>;
+  csrfToken?: string;
 }
 
 /** Parse JSON tags, return array */
@@ -47,11 +48,11 @@ function entityUrl(entityType: string, entityId: string): string {
   }
 }
 
-export const NodeDetailPage: FC<NodeDetailProps> = ({ node, incoming, outgoing }) => {
+export const NodeDetailPage: FC<NodeDetailProps> = ({ node, incoming, outgoing, csrfToken }) => {
   const tags = parseTags(node.tags);
 
   return (
-    <Layout title={node.title} activePath="/nodes">
+    <Layout title={node.title} activePath="/nodes" csrfToken={csrfToken}>
       {/* Breadcrumb */}
       <div class="breadcrumb">
         <a href="/nodes">Nodes</a>
@@ -76,6 +77,20 @@ export const NodeDetailPage: FC<NodeDetailProps> = ({ node, incoming, outgoing }
           Erstellt: {fmtDate(node.created_at)} · Aktualisiert: {fmtDate(node.updated_at)}
         </div>
       </div>
+
+      {/* URL */}
+      {node.url && (
+        <div style="margin-bottom: 1.23rem;">
+          <a
+            href={escapeHtml(node.url)}
+            target="_blank"
+            rel="noopener"
+            style="font-size: 0.85rem; color: var(--color-body); word-break: break-all;"
+          >
+            {escapeHtml(node.url)}
+          </a>
+        </div>
+      )}
 
       {/* Tags */}
       {tags.length > 0 && (

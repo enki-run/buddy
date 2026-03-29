@@ -5,15 +5,14 @@ import { VERSION } from "./types";
 import { ActivityService } from "./services/activity";
 
 // --- Public paths (no auth required) ---
-const PUBLIC_PATHS = [
-  "/.well-known/oauth-authorization-server",
-  "/oauth",
-  "/login",
-  "/health",
-];
+// Exact matches: only these paths, no sub-paths
+const PUBLIC_EXACT = new Set(["/health", "/login"]);
+// Prefix matches: these paths and all sub-paths (needed for OAuth flow)
+const PUBLIC_PREFIX = ["/oauth", "/.well-known/oauth-authorization-server"];
 
 function isPublicPath(path: string): boolean {
-  return PUBLIC_PATHS.some((p) => path === p || path.startsWith(p + "/"));
+  if (PUBLIC_EXACT.has(path)) return true;
+  return PUBLIC_PREFIX.some((p) => path === p || path.startsWith(p + "/"));
 }
 
 // --- IP hashing for audit trail ---
@@ -69,9 +68,15 @@ async function timingSafeEqual(a: string, b: string): Promise<boolean> {
   return bufA.length === bufB.length && result === 0;
 }
 
-// --- CSRF tokens (HMAC-SHA256 signed timestamp, 10 min validity) ---
+// --- CSRF tokens (HMAC-SHA256 signed nonce:timestamp, 10 min validity) ---
 export async function generateCsrfToken(secret: string): Promise<string> {
+  const nonceBytes = new Uint8Array(8);
+  crypto.getRandomValues(nonceBytes);
+  const nonce = Array.from(nonceBytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
   const timestamp = Date.now().toString();
+  const payload = `${nonce}:${timestamp}`;
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
@@ -80,24 +85,30 @@ export async function generateCsrfToken(secret: string): Promise<string> {
     false,
     ["sign"]
   );
-  const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(timestamp));
+  const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
   const hex = Array.from(new Uint8Array(sig))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
-  return `${timestamp}.${hex}`;
+  return `${payload}.${hex}`;
 }
 
 export async function validateCsrfToken(
   token: string,
   secret: string
 ): Promise<boolean> {
-  const parts = token.split(".");
-  if (parts.length !== 2) return false;
-  const [timestamp, sig] = parts;
+  const lastDot = token.lastIndexOf(".");
+  if (lastDot === -1) return false;
+  const payload = token.substring(0, lastDot);
+  const sig = token.substring(lastDot + 1);
+
+  // Extract timestamp from payload (nonce:timestamp)
+  const colonIdx = payload.indexOf(":");
+  if (colonIdx === -1) return false;
+  const timestamp = payload.substring(colonIdx + 1);
   const age = Date.now() - parseInt(timestamp, 10);
   if (isNaN(age) || age > 600_000 || age < 0) return false; // max 10 min
 
-  // Re-generate expected signature for same timestamp
+  // Re-generate expected signature
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
@@ -109,7 +120,7 @@ export async function validateCsrfToken(
   const expectedSig = await crypto.subtle.sign(
     "HMAC",
     key,
-    encoder.encode(timestamp)
+    encoder.encode(payload)
   );
   const expectedHex = Array.from(new Uint8Array(expectedSig))
     .map((b) => b.toString(16).padStart(2, "0"))
