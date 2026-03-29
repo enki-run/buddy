@@ -10,6 +10,7 @@ import {
   handleLoginFailure,
   handleLogout,
   hashIP,
+  timingSafeEqual,
 } from "./auth";
 import { createOAuthRoutes } from "./oauth";
 import { ActivityService } from "./services/activity";
@@ -74,7 +75,8 @@ app.post("/login", async (c) => {
   const ipHash = clientIP !== "unknown" ? await hashIP(clientIP) : undefined;
 
   const csrfValid = csrf ? await validateCsrfToken(csrf, c.env.BUDDY_TOKEN) : false;
-  if (!csrfValid || token !== c.env.BUDDY_TOKEN) {
+  const tokenValid = await timingSafeEqual(token, c.env.BUDDY_TOKEN);
+  if (!csrfValid || !tokenValid) {
     await handleLoginFailure(activity, ipHash);
     const newCsrfToken = await generateCsrfToken(c.env.BUDDY_TOKEN);
     return c.html(<LoginPage csrfToken={newCsrfToken} error />, 401);

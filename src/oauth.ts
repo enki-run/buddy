@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import type { Env } from "./types";
+import { timingSafeEqual } from "./auth";
 
 // OAuth 2.1 for single-user MCP server
 // Uses BUDDY_TOKEN as the basis for all crypto operations
@@ -8,6 +9,24 @@ import type { Env } from "./types";
 
 const OAUTH_CLIENT_ID = "buddy-mcp-client";
 const CODE_EXPIRY_MS = 300_000; // 5 minutes
+
+// --- Redirect URI validation ---
+// Only allow localhost/loopback origins (MCP clients run locally)
+function isAllowedRedirectUri(uri: string): boolean {
+  try {
+    const url = new URL(uri);
+    const hostname = url.hostname;
+    return (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "::1" ||
+      hostname === "[::1]" ||
+      hostname.endsWith(".localhost")
+    );
+  } catch {
+    return false;
+  }
+}
 
 // --- HMAC signing ---
 async function hmacSign(data: string, secret: string): Promise<string> {
@@ -23,46 +42,6 @@ async function hmacSign(data: string, secret: string): Promise<string> {
   return Array.from(new Uint8Array(sig))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
-}
-
-// --- Timing-safe comparison via HMAC ---
-async function timingSafeEqual(a: string, b: string): Promise<boolean> {
-  const encoder = new TextEncoder();
-  const bufA = encoder.encode(a);
-  const bufB = encoder.encode(b);
-
-  const maxLen = Math.max(bufA.length, bufB.length);
-  const paddedA = new Uint8Array(maxLen);
-  const paddedB = new Uint8Array(maxLen);
-  paddedA.set(bufA);
-  paddedB.set(bufB);
-
-  const keyA = await crypto.subtle.importKey(
-    "raw",
-    paddedA,
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-  const keyB = await crypto.subtle.importKey(
-    "raw",
-    paddedB,
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-
-  const dummy = new Uint8Array(32);
-  const sigA = await crypto.subtle.sign("HMAC", keyA, dummy);
-  const sigB = await crypto.subtle.sign("HMAC", keyB, dummy);
-
-  const viewA = new Uint8Array(sigA);
-  const viewB = new Uint8Array(sigB);
-  let result = 0;
-  for (let i = 0; i < viewA.length; i++) {
-    result |= viewA[i] ^ viewB[i];
-  }
-  return bufA.length === bufB.length && result === 0;
 }
 
 // --- Stateless authorization code: timestamp.sig ---
@@ -186,6 +165,13 @@ export function createOAuthRoutes() {
       return c.text("Missing redirect_uri", 400);
     }
 
+    if (!isAllowedRedirectUri(redirectUri)) {
+      return c.json(
+        { error: "invalid_request", error_description: "redirect_uri must be localhost" },
+        400
+      );
+    }
+
     // OAuth 2.1: PKCE S256 is REQUIRED
     if (!codeChallenge || codeChallengeMethod !== "S256") {
       return c.json(
@@ -216,6 +202,13 @@ export function createOAuthRoutes() {
     const codeChallenge = body["code_challenge"] as string;
     const codeChallengeMethod = body["code_challenge_method"] as string;
 
+    if (!isAllowedRedirectUri(redirectUri)) {
+      return c.json(
+        { error: "invalid_request", error_description: "redirect_uri must be localhost" },
+        400
+      );
+    }
+
     // OAuth 2.1: PKCE S256 is REQUIRED
     if (!codeChallenge || codeChallengeMethod !== "S256") {
       return c.json(
@@ -228,7 +221,8 @@ export function createOAuthRoutes() {
       );
     }
 
-    if (token !== c.env.BUDDY_TOKEN) {
+    const tokenValid = await timingSafeEqual(token, c.env.BUDDY_TOKEN);
+    if (!tokenValid) {
       return c.html(
         authorizePageHTML({
           redirectUri,
