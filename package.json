@@ -13,7 +13,7 @@
     "migrate:local": "wrangler d1 migrations apply buddy-v3 --local"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.27.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "highlight.js": "^11.11.0",
     "hono": "^4.7.0",
     "marked": "^17.0.5",
