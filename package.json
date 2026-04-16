@@ -15,7 +15,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.0",
     "highlight.js": "^11.11.0",
-    "hono": "^4.7.0",
+    "hono": "^4.12.14",
     "marked": "^17.0.5",
     "ulidx": "^2.4.0",
     "zod": "^4.3.6"
